@@ -1,0 +1,251 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import '../Login/Login.css'
+
+// ─── Inline SVG Icons ─────────────────────────────────────────────────────────
+const Icon = ({ d, size = 20, stroke = "currentColor" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+        stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        {d.split(" M").map((seg, i) => (
+            <path key={i} d={i === 0 ? seg : "M" + seg} />
+        ))}
+    </svg>
+);
+
+const Icons = {
+    Eye: "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z",
+    EyeOff: "M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94 M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19 M1 1l22 22",
+    Users: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75",
+    Wallet: "M21 12V7H5a2 2 0 0 1 0-4h14v4 M3 5v14a2 2 0 0 0 2 2h16v-5 M18 12a2 2 0 0 0 0 4h4v-4z",
+    Trending: "M23 6l-9.5 9.5-5-5L1 18 M17 6h6v6",
+    Bike: "M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5 M14 17H9 M17 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0 M5 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0",
+};
+
+
+
+// ─── Network Illustration ─────────────────────────────────────────────────────
+function NetworkIllustration() {
+    const nodes = [
+        { cx: 200, cy: 60 },
+        { cx: 100, cy: 160 }, { cx: 300, cy: 160 },
+        { cx: 50, cy: 260 }, { cx: 155, cy: 260 },
+        { cx: 245, cy: 260 }, { cx: 350, cy: 260 },
+    ];
+    const edges = [
+        [0, 1], [0, 2], [1, 3], [1, 4], [2, 5], [2, 6]
+    ];
+    const colors = ["#6366f1", "#22d3ee", "#22d3ee", "#10b981", "#10b981", "#f59e0b", "#f59e0b"];
+
+    return (
+        <svg viewBox="0 0 400 320" className="net-svg">
+            <defs>
+                <filter id="glow">
+                    <feGaussianBlur stdDeviation="3" result="blur" />
+                    <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+            </defs>
+            {edges.map(([a, b], i) => (
+                <line key={i}
+                    x1={nodes[a].cx} y1={nodes[a].cy}
+                    x2={nodes[b].cx} y2={nodes[b].cy}
+                    stroke="rgba(99,102,241,0.3)" strokeWidth="1.5"
+                    strokeDasharray="6 4"
+                    className="net-edge"
+                    style={{ animationDelay: `${i * 0.4}s` }}
+                />
+            ))}
+            {nodes.map((n, i) => (
+                <g key={i} filter="url(#glow)">
+                    <circle cx={n.cx} cy={n.cy} r={i === 0 ? 10 : 7}
+                        fill={colors[i]} opacity={0.8}
+                        className="net-node"
+                        style={{ animationDelay: `${i * 0.35}s` }}
+                    />
+                    <circle cx={n.cx} cy={n.cy} r={i === 0 ? 18 : 13}
+                        fill="none" stroke={colors[i]} strokeWidth="1" opacity={0.2}
+                    />
+                </g>
+            ))}
+        </svg>
+    );
+}
+
+// ─── Login Component ──────────────────────────────────────────────────────────
+export default function Login({ onLogin = () => { } }) {
+    const navigate = useNavigate();
+    const [role, setRole] = useState("user");   // "admin" | "user"
+    const [method, setMethod] = useState("password");
+    const [showPwd, setShowPwd] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+    const [form, setForm] = useState({ userId: "", password: "", otp: "" });
+
+    const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
+
+    const stats = [
+        { label: "Total Members", value: "12,500+", icon: "Users", color: "var(--primary)" },
+        { label: "Total Paid Out", value: "₹2.5Cr+", icon: "Wallet", color: "var(--gold)" },
+        { label: "Board Levels", value: "6", icon: "Trending", color: "var(--accent)" },
+    ];
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError("");
+        setLoading(true);
+        await new Promise(r => setTimeout(r, 700));
+        setLoading(false);
+
+        // Call onLogin if provided
+        if (onLogin) {
+            onLogin(role);
+        }
+
+        navigate(role === "admin" ? "/admin/dashboard" : "/dashboard");
+    };
+
+    return (
+        <>
+            <div className="login-root">
+
+                {/* ── Left panel ── */}
+                <div className="login-left">
+                    <div className="login-blob blob1" />
+                    <div className="login-blob blob2" />
+                    <div className="login-blob blob3" />
+
+                    {/* Brand */}
+                    <div className="login-brand">
+                        <div className="login-brand-row">
+                            <div className="login-brand-icon">
+                                <Icon d={Icons.Bike} size={26} />
+                            </div>
+                            <div className="login-brand-name">AGHAN PROMOTERS</div>
+                        </div>
+                        <div className="login-brand-sub">Build your network. Earn your freedom.</div>
+                    </div>
+
+                    {/* Illustration */}
+                    <div className="login-illustration">
+                        <NetworkIllustration />
+                    </div>
+
+                    {/* Stats */}
+                    <div className="login-stats">
+                        {stats.map(s => (
+                            <div className="stat-card" key={s.label}>
+                                <div className="stat-icon" style={{ background: `${s.color}22`, color: s.color }}>
+                                    <Icon d={Icons[s.icon]} size={18} />
+                                </div>
+                                <div>
+                                    <div className="stat-value">{s.value}</div>
+                                    <div className="stat-label">{s.label}</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* ── Right panel ── */}
+                <div className="login-right">
+                    <div className="login-box">
+
+                        {/* Mobile brand */}
+                        <div className="login-mobile-brand">
+                            <div className="login-mobile-brand-icon">
+                                <Icon d={Icons.Bike} size={20} />
+                            </div>
+                            <div className="login-mobile-brand-name">AGHAN PROMOTERS</div>
+                        </div>
+
+                        <div className="login-heading">Welcome back</div>
+                        <div className="login-sub">Sign in to access your account</div>
+
+                        <form className="login-form" onSubmit={handleSubmit}>
+
+                            {/* Role selector */}
+                            <div className="form-group">
+                                <label className="form-label">Login as</label>
+                                <div className="role-selector">
+                                    {["admin", "user"].map(r => (
+                                        <button
+                                            key={r} type="button"
+                                            className={`role-btn ${r} ${role === r ? "selected" : ""}`}
+                                            onClick={() => setRole(r)}
+                                        >
+                                            <span className="role-tag">{r.toUpperCase()}</span>
+                                            {r === "admin" ? "Super Admin" : "Member"}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* User ID */}
+                            <div className="form-group">
+                                <label className="form-label" htmlFor="userId">Mobile Number / User ID</label>
+                                <input
+                                    id="userId" className="form-input"
+                                    placeholder="Enter mobile or AGN-XXXXX"
+                                    value={form.userId} onChange={set("userId")}
+                                    required
+                                />
+                            </div>
+
+                            {/* Password / OTP */}
+                            {method === "password" ? (
+                                <div className="form-group">
+                                    <label className="form-label" htmlFor="password">
+                                        Password
+                                        <button type="button" className="form-forgot">Forgot Password?</button>
+                                    </label>
+                                    <div className="input-wrap">
+                                        <input
+                                            id="password"
+                                            className="form-input"
+                                            type={showPwd ? "text" : "password"}
+                                            placeholder="Enter your password"
+                                            value={form.password} onChange={set("password")}
+                                            required
+                                        />
+                                        <button type="button" className="eye-btn" onClick={() => setShowPwd(s => !s)}>
+                                            <Icon d={showPwd ? Icons.EyeOff : Icons.Eye} size={18} />
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="form-group">
+                                    <label className="form-label" htmlFor="otp">Enter OTP</label>
+                                    <input
+                                        id="otp" className={`form-input otp-input`}
+                                        type="text" maxLength={6} placeholder="• • • • • •"
+                                        value={form.otp} onChange={set("otp")} required
+                                    />
+                                </div>
+                            )}
+
+                            {/* Hint */}
+                            <div className="login-hint">
+                                🧪 Temporary mode — <b>any input</b> will login as <b>{role}</b>
+                            </div>
+
+                            {error && <div className="login-error">{error}</div>}
+
+                            {/* Submit */}
+                            <button type="submit" className="btn-primary" disabled={loading}>
+                                {loading && <span className="spinner" />}
+                                {loading ? "Signing in..." : "Sign In"}
+                            </button>
+
+                            {/* Toggle method */}
+                            <button
+                                type="button" className="btn-outline"
+                                onClick={() => setMethod(m => m === "password" ? "otp" : "password")}
+                            >
+                                {method === "password" ? "Login with OTP" : "Login with Password"}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </>
+    );
+}
